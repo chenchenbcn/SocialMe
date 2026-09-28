@@ -1,0 +1,36 @@
+# Copy to socialme.yaml (safe to commit: no secrets inside) or config.yaml (git-ignored). ${VARS} are read from the environment / .env
+output_dir: reports
+database: data/socialme.db
+top_countries_threshold: 0.60   # countries that together make >= 60% of views
+
+accounts:
+  - name: our-youtube
+    type: youtube
+    client_id: ${YOUTUBE_CLIENT_ID}
+    client_secret: ${YOUTUBE_CLIENT_SECRET}
+    refresh_token: ${YOUTUBE_REFRESH_TOKEN}
+
+  - name: our-instagram
+    type: instagram
+    ig_user_id: ${INSTAGRAM_USER_ID}
+    access_token: ${META_ACCESS_TOKEN}
+    country_timeframe: this_month      # this_week | this_month | last_30_days ...
+
+  - name: our-facebook
+    type: facebook
+    page_id: ${FACEBOOK_PAGE_ID}
+    access_token: ${META_PAGE_ACCESS_TOKEN}
+
+  - name: our-tiktok
+    type: tiktok
+    business_id: ${TIKTOK_BUSINESS_ID}
+    access_token: ${TIKTOK_ACCESS_TOKEN}
+
+  # Any other platform (LinkedIn, X, ...) or missing metrics: native CSV exports
+  - name: our-linkedin
+    type: csv
+    platform: linkedin
+    posts_csv: exports/linkedin_posts.csv
+    countries_csv: exports/linkedin_countries.csv
+    followers_total: 0
+    new_followers: 0

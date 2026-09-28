@@ -1,0 +1,44 @@
+name: Collect social media analytics
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # every Monday: previous week
+    - cron: "0 6 1 * *"   # 1st of each month: previous month
+  workflow_dispatch:
+    inputs:
+      period:
+        description: "last-week | last-month | last-N-days"
+        default: last-month
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install .
+      - name: Pick period
+        id: period
+        run: |
+          if [ -n "${{ github.event.inputs.period }}" ]; then echo "p=${{ github.event.inputs.period }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 6 * * 1" ]; then echo "p=last-week" >> "$GITHUB_OUTPUT"
+          else echo "p=last-month" >> "$GITHUB_OUTPUT"; fi
+      - name: Collect
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          META_PAGE_ACCESS_TOKEN: ${{ secrets.META_PAGE_ACCESS_TOKEN }}
+          TIKTOK_BUSINESS_ID: ${{ secrets.TIKTOK_BUSINESS_ID }}
+          TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
+        run: socialme collect --config ${{ vars.SOCIALME_CONFIG || 'socialme.yaml' }} --period ${{ steps.period.outputs.p }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: social-report-${{ steps.period.outputs.p }}-${{ github.run_id }}
+          path: reports/
